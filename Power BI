@@ -1,0 +1,157 @@
+#DAX aggregate functions in Power BI
+
+##SUM
+
+--New measure for sales
+--calculate total sales
+--sum adds all numbers in a  column
+--parenthesis specifies table and then column
+TotalSales=SUM('Sales'[SalesAmount])
+
+##COUNTA, COUNTROWS, 
+
+--New measure: number of products
+--Not counting numerical values, so we use COUNTA rather than COUNT
+
+NumberofProducts=COUNTA('Product'[ProductName])
+
+--New diff. measure: number of products more exactly
+
+NumProducts=COUNTROWS('Product')
+
+##Notes within DAX measures
+-- shit + enter opens up a second line, then type // and comment will come after
+-- for paragraphs, the beginning will need /* and ending */ to register 2+ lines of typing
+--as comments
+
+##COUNTBLANK
+--create measure to find blanks
+
+NoClass=COUNTBLANK('Product'[ClassName])
+
+--then return to matrix, drag in measure, to find blank classes
+
+##DISTINCTCOUNT
+--counts each unique values only once
+--i.e. counting store keys or names in measure
+
+StoresWithSales=DISTINCTCOUNT('Sales'[StoreKey])
+
+--can always provide formatting in Data Type tab
+--very useful for calendar dates as filters
+
+##Add a calculated column, an alternative to a measure
+
+--We want difference between cost and sales to find profit.
+--Go to New Column, 
+
+GrossProfit=Sales[SalesAmount]-Sales[TotalCost]
+
+--but these use RAM and CPU power unlike measures
+--however, the results of calculated columns can be used as splicers or filters in Power BI
+
+##Implicit vs. explicit measures
+
+--implicit ones are made on the fly by adding measures into a visual, and is temporary
+--Otherwise, measures that exist in the data model tables are explicit
+
+##Create a measure with operators
+
+--Create net sales measure,
+
+NetSales=SUM('Sales'[SalesAmount])-SUM('Sales'[TotalCost])-SUM('Sales'[DiscountAmount])-
+SUM('Sales'[ReturnAmount])
+
+--can then use new measure to compare with things like BrandName
+
+##Create a measure with DIVIDE
+
+--new measure to find gross profit %,
+
+GrossProfit%=DIVIDE(SUM('Sales'[Gross Profit]), SUM('Sales'[SalesAmount]))
+
+--saying divide sum of gp divided by sum of sales amount
+
+##Iterators and row context: SUMX (diff. than aggregate functions)
+
+--Removes row-by-row thru table doing a calculation and THEN adds them
+--Works like calculated columns
+--Calculation on returns to find what categories of products/specific ones are returned
+--So, new total returns measure,
+--in each row of sales table, multiply return $ by return quantity, and add them up
+
+TotalReturns=SUMX(Sales, [ReturnAmount]*[ReturnQuantity])
+
+--compare with product category to see greatest total returns amount
+--other iteration functions are countx, averagex, minx, maxx, rankx
+
+##Basic DAX date and time functions
+
+--DAY, MONTH, YEAR (date) to extract any of the respective date metrics
+--HOUR, MINUTE, SECOND (time)
+--WEEKDAY, WEEKNUM (date)
+--DATEDIFF (start date, end date, date interval)
+--EOMONTH (start date, months+/-)
+--TODAY, NOW
+
+--create new measure to find duration of promotion,
+
+Duration=DATEDIFF(SUM(Promotion[StartDate]), SUM(Promotion[EndDate]), DAY)
+
+--^Could have used WEEK, SECOND, etc. instead of DAY
+--can now compare against PromotionName column
+
+##LOGICAL FUNCTIONS
+##Use FIND
+
+--allows us to find a substring within another string
+--wanna find mice in our product list
+--create new column called 'mouse',
+
+Mouse=FIND("Mouse", 'Product'[ProductName], 1, 0)
+
+--so if 'mouse' is the first letter in the name, the function will report back '1'
+--if 'mouse' is in the 6th letter, the function will report back '6'
+--if it is not there at all, it will report back '0', the not found value
+
+##Use IF
+
+--will often use with 'FIND'. 
+--modify previous column,
+
+Mouse=IF(FIND("Mouse", 'Product'[ProductName],1,0)>0, "Yes", "No")
+
+--If the result is greater than 0, then yes its a mouse, if not then no
+--our results are now yesses and noes instead of 1s and 0s
+--can use things other than boolean yes or no. Shown below.
+
+##Use OR to handle case sensitivity
+
+--if either capital or lowercase 'mouse' is found, it will be a hit
+
+Mouse=IF(OR(FIND("Mouse", 'Product'[ProductName],1,0)>0, 
+FIND("mouse", 'Product'[ProductName],1,0)>0), "Mouse", "")
+
+--either find upper or lowercase 'mouse' in the product table with product name
+--result is 'mouse' if this is true, if not it is blank ('')
+
+##Use CALCULATE to create a simple filter
+
+--CALCULATE(expression, filter1, filter2...)
+--Where 'expression' is the measure formula, and the filters are simple filter(s)
+--new measure,
+
+Over100=CALCULATE([NumberofProducts], 'Product'[UnitCost]>100)
+
+--count number of products that are over $100 at unit cost 
+
+
+
+
+
+
+
+
+
+
+
